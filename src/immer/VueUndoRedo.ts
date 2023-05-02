@@ -18,16 +18,20 @@ export default class VueUndoRedo extends VueImmer {
 
 	update(updater: Function) {
 		const [nextState, patches, inversePatches] = produceWithPatches(this._state.value, updater) as unknown as any[]
-		this._state.value = nextState
-		if (this._currentStep === this._maxStep) {
-			this._changes.unshift()
-		} else {
-			this._currentStep++
+		if (patches.length === 0) {
+			return null
 		}
-		this._changes.splice(this._currentStep)
+		this._state.value = nextState
+		this._changes.splice(++this._currentStep)
 		this._changes.push(patches)
 		this._inverseChanges.splice(this._currentStep)
 		this._inverseChanges.push(inversePatches)
+		if (this._currentStep > this._maxStep) {
+			this._changes.shift()
+			this._inverseChanges.shift()
+			this._currentStep--
+		}
+		return patches
 	}
 
 	undo() {
